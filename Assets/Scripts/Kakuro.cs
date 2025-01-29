@@ -1,125 +1,152 @@
 using System;
-using System.Linq;
 using System.Collections.Generic;
 using UnityEngine;
 
 public class Kakuro
 {
-    public int[] horz;  // Sums of each column
-    public int[] vert;  // Sums of each row
+    public enum CellType { Blocked, White }
+    public CellType[,] Grid { get; private set; }
+    public int[,] HorizontalClues { get; private set; }
+    public int[,] VerticalClues { get; private set; }
+    private int[,] solution;
 
-    // forbidden[v,h,n] = true means digit (n+1) is not allowed in cell (v,h).
-    private bool[,,] forbidden;
-
-    // Return the single fixed value for (v,h) if exactly one possibility, else 0.
-    public int GetValue(int v, int h)
-    {
-        int value = 0;
-        for (int n = 1; n <= 9; n++)
-        {
-            if (!forbidden[v, h, n - 1])
-            {
-                // If we already found a possible value, that means multiple possibilities => 0
-                if (value > 0)
-                    return 0;
-                value = n;
-            }
-        }
-        return value;
-    }
-
-    /// <summary>
-    /// Constructor that builds a random "solution" with the given width x height,
-    /// ensuring each row/column has distinct digits.  Then sets sums in horz/vert.
-    /// </summary>
     public Kakuro(int width, int height, System.Random random)
     {
-        // 1) Generate a full solution with backtracking
-        int[,] solution = new int[height, width];
-        bool success = FillGrid(solution, 0, 0, random);
-        if (!success)
-            throw new Exception("Could not generate a valid solution with unique row/column digits.");
+        // Initialize arrays with correct dimensions
+        Grid = new CellType[height, width];
+        HorizontalClues = new int[height, width];
+        VerticalClues = new int[height, width];
+        solution = new int[height, width];
 
-        // 2) Compute sums for each row and column
-        horz = new int[width];  // sums of columns
-        vert = new int[height]; // sums of rows
-        for (int r = 0; r < height; r++)
-        {
-            for (int c = 0; c < width; c++)
-            {
-                horz[c] += solution[r, c];
-                vert[r] += solution[r, c];
-            }
-        }
-
-        // 3) Build the forbidden array so GetValue(i,j) returns the exact solution digit
-        forbidden = new bool[height, width, 9];
-        for (int r = 0; r < height; r++)
-        {
-            for (int c = 0; c < width; c++)
-            {
-                int val = solution[r, c];
-                // For each cell, forbid everything EXCEPT the correct digit
-                for (int n = 1; n <= 9; n++)
-                {
-                    forbidden[r, c, n - 1] = (n != val);
-                }
-            }
-        }
+        GenerateRandomLayout(random);
+        GenerateValidSolution(random);
+        CalculateClues();
     }
 
-    /// <summary>
-    /// Backtracking: fill the grid with digits [1..9], ensuring row/col uniqueness.
-    /// </summary>
-    private bool FillGrid(int[,] grid, int row, int col, System.Random random)
+    void GenerateRandomLayout(System.Random random)
     {
-        int height = grid.GetLength(0);
-        int width = grid.GetLength(1);
-
-        // If we've filled all rows, we're done
-        if (row == height)
-            return true;
-
-        // Compute next cell indices
-        int nextRow = (col == width - 1) ? row + 1 : row;
-        int nextCol = (col + 1) % width;
-
-        // Shuffle digits 1..9
-        List<int> digits = Enumerable.Range(1, 9)
-                                     .OrderBy(_ => random.Next())
-                                     .ToList();
-
-        foreach (int d in digits)
+        // Randomly place blocked cells (25% probability)
+        for (int i = 0; i < Grid.GetLength(0); i++)
         {
-            if (CanPlace(grid, row, col, d))
+            for (int j = 0; j < Grid.GetLength(1); j++)
             {
-                grid[row, col] = d;
+                Grid[i, j] = (random.NextDouble() < 0.25f) ?
+                    CellType.Blocked :
+                    CellType.White;
+            }
+        }
 
-                if (FillGrid(grid, nextRow, nextCol, random))
+        // Ensure first row and column have blocked cells
+        for (int i = 0; i < Grid.GetLength(0); i++) Grid[i, 0] = CellType.Blocked;
+        for (int j = 0; j < Grid.GetLength(1); j++) Grid[0, j] = CellType.Blocked;
+    }
+
+    void GenerateValidSolution(System.Random random)
+    {
+        // Backtracking algorithm to fill white cells
+        List<(int, int)> cellsToFill = new List<(int, int)>();
+        for (int i = 0; i < Grid.GetLength(0); i++)
+            for (int j = 0; j < Grid.GetLength(1); j++)
+                if (Grid[i, j] == CellType.White)
+                    cellsToFill.Add((i, j));
+
+        FillCells(cellsToFill, 0, random);
+    }
+
+    bool FillCells(List<(int, int)> cells, int index, System.Random random)
+    {
+        if (index >= cells.Count) return true;
+
+        var (row, col) = cells[index];
+        List<int> numbers = new List<int> { 1, 2, 3, 4, 5, 6, 7, 8, 9 };
+        Shuffle(numbers, random);
+
+        foreach (int num in numbers)
+        {
+            if (IsValidPlacement(row, col, num))
+            {
+                solution[row, col] = num;
+                if (FillCells(cells, index + 1, random))
                     return true;
-
-                // backtrack
-                grid[row, col] = 0;
+                solution[row, col] = 0;
             }
         }
         return false;
     }
 
-    /// <summary>
-    /// Checks if digit d can be placed in (row,col) without repeating in that row or col.
-    /// </summary>
-    private bool CanPlace(int[,] grid, int row, int col, int d)
+    bool IsValidPlacement(int row, int col, int num)
     {
-        // Check row
-        for (int c = 0; c < grid.GetLength(1); c++)
+        // Check horizontal run
+        int currentCol = col - 1;
+        while (currentCol >= 0 && Grid[row, currentCol] == CellType.White)
         {
-            if (grid[row, c] == d) return false;
+            if (solution[row, currentCol] == num) return false;
+            currentCol--;
         }
-        // Check column
-        for (int r = 0; r < grid.GetLength(0); r++)
+
+        // Check vertical run
+        int currentRow = row - 1;
+        while (currentRow >= 0 && Grid[currentRow, col] == CellType.White)
         {
-            if (grid[r, col] == d) return false;
+            if (solution[currentRow, col] == num) return false;
+            currentRow--;
         }
+
         return true;
+    }
+
+    void CalculateClues()
+    {
+        for (int i = 0; i < Grid.GetLength(0); i++)
+        {
+            for (int j = 0; j < Grid.GetLength(1); j++)
+            {
+                if (Grid[i, j] == CellType.Blocked)
+                {
+                    // Horizontal clue calculation
+                    int hSum = 0;
+                    int c = j + 1;
+                    while (c < Grid.GetLength(1) && Grid[i, c] == CellType.White)
+                    {
+                        hSum += solution[i, c];
+                        c++;
+                    }
+                    HorizontalClues[i, j] = hSum;
+
+                    // Vertical clue calculation
+                    int vSum = 0;
+                    int r = i + 1;
+                    while (r < Grid.GetLength(0) && Grid[r, j] == CellType.White)
+                    {
+                        vSum += solution[r, j];
+                        r++;
+                    }
+                    VerticalClues[i, j] = vSum;
+                }
+            }
+        }
+    }
+
+    void Shuffle<T>(List<T> list, System.Random random)
+    {
+        int n = list.Count;
+        while (n > 1)
+        {
+            n--;
+            int k = random.Next(n + 1);
+            T value = list[k];
+            list[k] = list[n];
+            list[n] = value;
+        }
+    }
+
+    public int GetSolution(int row, int col)
+    {
+        if (row >= 0 && row < solution.GetLength(0) &&
+            col >= 0 && col < solution.GetLength(1))
+        {
+            return solution[row, col];
+        }
+        return 0;
     }
 }

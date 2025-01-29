@@ -374,12 +374,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   gridCellPrefab: {fileID: 412718389468381206, guid: 5798c3f363be2384fb918ce176d0e780, type: 3}
-  cluePrefab: {fileID: 6989153372184255782, guid: e0d4da3f1234a7843a838863a9f52407, type: 3}
   gridPanel: {fileID: 1416841281}
-  topCluesContainer: {fileID: 1949124430}
-  leftCluesContainer: {fileID: 935874019}
-  gridLayoutGroup: {fileID: 1416841282}
-  gridSize: 3
+  gridLayout: {fileID: 1416841282}
+  gridSize: 5
+  blockedCellProbability: 0.19
 --- !u!4 &1149079628
 Transform:
   m_ObjectHideFlags: 0
@@ -456,7 +454,7 @@ MonoBehaviour:
   m_CellSize: {x: 30, y: 30}
   m_Spacing: {x: 5, y: 5}
   m_Constraint: 1
-  m_ConstraintCount: 3
+  m_ConstraintCount: 5
 --- !u!114 &1416841283
 MonoBehaviour:
   m_ObjectHideFlags: 0
