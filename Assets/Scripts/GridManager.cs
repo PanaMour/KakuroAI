@@ -6,7 +6,7 @@ using System.Collections.Generic;
 public class GridManager : MonoBehaviour
 {
     [Header("Prefabs")]
-    public GameObject gridCellPrefab; // Your existing prefab
+    public GameObject gridCellPrefab;
 
     [Header("UI References")]
     public RectTransform gridPanel;
@@ -129,6 +129,7 @@ public class GridManager : MonoBehaviour
 
         inputField.text = "";
 
+        inputField.onEndEdit.AddListener((value) => HandleInput(value, row, col, inputField));
     }
 
     void HandleInput(string value, int row, int col, TMP_InputField field)
@@ -152,6 +153,11 @@ public class GridManager : MonoBehaviour
         field.textComponent.color = Color.black;
     }
 
+    Image GetCellBackground(TMP_InputField inputField)
+    {
+        return inputField.GetComponentInParent<Image>();
+    }
+
     void ValidateRun(int row, int col)
     {
         int horizontalStartCol = col;
@@ -166,25 +172,48 @@ public class GridManager : MonoBehaviour
             int horizontalClue = kakuroPuzzle.HorizontalClues[row, horizontalStartCol];
             int horizontalSum = 0;
             List<TMP_InputField> horizontalCells = new List<TMP_InputField>();
+            HashSet<int> uniqueNumbers = new HashSet<int>();
 
-            // Calculate sum for horizontal run
+            bool hasDuplicates = false;
             for (int c = horizontalStartCol + 1;
                  c < kakuroPuzzle.Grid.GetLength(1) &&
                  kakuroPuzzle.Grid[row, c] == Kakuro.CellType.White;
                  c++)
             {
-                horizontalSum += GetCellValue(row, c);
+                int val = GetCellValue(row, c);
+                horizontalSum += val;
+
+                if (val != 0 && !uniqueNumbers.Add(val))
+                {
+                    hasDuplicates = true;
+                }
+
                 horizontalCells.Add(inputFields[row][c]);
             }
 
-            // Only validate if there's an actual run
+            Color statusColor = Color.white;
             if (horizontalClue > 0)
             {
-                UpdateCellColors(horizontalCells, horizontalSum, horizontalClue);
+                if (hasDuplicates)
+                {
+                    statusColor = Color.red;
+                }
+                else if (horizontalSum == horizontalClue)
+                {
+                    statusColor = Color.green;
+                }
+                else if (horizontalSum > horizontalClue)
+                {
+                    statusColor = Color.red;
+                }
+                else
+                {
+                    statusColor = new Color(1, 0.5f, 0); // Orange
+                }
+
+                UpdateCellColors(horizontalCells, statusColor);
             }
         }
-
-        // Vertical run validation
         int verticalStartRow = row;
         while (verticalStartRow >= 0 &&
                kakuroPuzzle.Grid[verticalStartRow, col] != Kakuro.CellType.Blocked)
@@ -197,23 +226,49 @@ public class GridManager : MonoBehaviour
             int verticalClue = kakuroPuzzle.VerticalClues[verticalStartRow, col];
             int verticalSum = 0;
             List<TMP_InputField> verticalCells = new List<TMP_InputField>();
+            HashSet<int> verticalNumbers = new HashSet<int>();
 
-            // Calculate sum for vertical run
+            bool hasVerticalDuplicates = false;
             for (int r = verticalStartRow + 1;
                  r < kakuroPuzzle.Grid.GetLength(0) &&
                  kakuroPuzzle.Grid[r, col] == Kakuro.CellType.White;
                  r++)
             {
-                verticalSum += GetCellValue(r, col);
+                int val = GetCellValue(r, col);
+                verticalSum += val;
+
+                if (val != 0 && !verticalNumbers.Add(val))
+                {
+                    hasVerticalDuplicates = true;
+                }
+
                 verticalCells.Add(inputFields[r][col]);
             }
 
-            // Only validate if there's an actual run
+            Color verticalColor = Color.white;
             if (verticalClue > 0)
             {
-                UpdateCellColors(verticalCells, verticalSum, verticalClue);
+                if (hasVerticalDuplicates)
+                {
+                    verticalColor = Color.red;
+                }
+                else if (verticalSum == verticalClue)
+                {
+                    verticalColor = Color.green;
+                }
+                else if (verticalSum > verticalClue)
+                {
+                    verticalColor = Color.red;
+                }
+                else
+                {
+                    verticalColor = new Color(1, 0.5f, 0); // Orange
+                }
+
+                UpdateCellColors(verticalCells, verticalColor);
             }
         }
+
     }
 
     int GetCellValue(int row, int col)
@@ -227,15 +282,15 @@ public class GridManager : MonoBehaviour
         return int.TryParse(inputFields[row][col].text, out int val) ? val : 0;
     }
 
-    void UpdateCellColors(List<TMP_InputField> cells, int sum, int clue)
+    void UpdateCellColors(List<TMP_InputField> cells, Color color)
     {
-        Color statusColor = sum == clue ? Color.green :
-                           sum > clue ? Color.red :
-                           new Color(1, 0.5f, 0);
-
         foreach (TMP_InputField cell in cells)
         {
-            cell.image.color = statusColor;
+            Image background = GetCellBackground(cell);
+            if (background != null)
+            {
+                background.color = color;
+            }
         }
     }
 
@@ -243,6 +298,8 @@ public class GridManager : MonoBehaviour
     {
         foreach (Transform child in gridPanel)
         {
+            Image img = child.GetComponent<Image>();
+            if (img != null) img.color = Color.white;
             Destroy(child.gameObject);
         }
     }

@@ -77,23 +77,38 @@ public class Kakuro
     bool IsValidPlacement(int row, int col, int num)
     {
         // Check horizontal run
-        int currentCol = col - 1;
-        while (currentCol >= 0 && Grid[row, currentCol] == CellType.White)
+        List<int> horizontalNumbers = new List<int>();
+        int c = col;
+        while (c >= 0 && Grid[row, c] == CellType.White)
         {
-            if (solution[row, currentCol] == num) return false;
-            currentCol--;
+            if (c != col) horizontalNumbers.Add(solution[row, c]);
+            c--;
         }
+        c = col + 1;
+        while (c < Grid.GetLength(1) && Grid[row, c] == CellType.White)
+        {
+            horizontalNumbers.Add(solution[row, c]);
+            c++;
+        }
+        if (horizontalNumbers.Contains(num)) return false;
 
         // Check vertical run
-        int currentRow = row - 1;
-        while (currentRow >= 0 && Grid[currentRow, col] == CellType.White)
+        List<int> verticalNumbers = new List<int>();
+        int r = row;
+        while (r >= 0 && Grid[r, col] == CellType.White)
         {
-            if (solution[currentRow, col] == num) return false;
-            currentRow--;
+            if (r != row) verticalNumbers.Add(solution[r, col]);
+            r--;
         }
-
-        return true;
+        r = row + 1;
+        while (r < Grid.GetLength(0) && Grid[r, col] == CellType.White)
+        {
+            verticalNumbers.Add(solution[r, col]);
+            r++;
+        }
+        return !verticalNumbers.Contains(num);
     }
+
 
     void CalculateClues()
     {
