@@ -10,33 +10,31 @@ public class Kakuro
     public int[,] VerticalClues { get; private set; }
     private int[,] solution;
 
-    public Kakuro(int width, int height, System.Random random)
+    public Kakuro(int width, int height, System.Random random,float blockedProbability = 0.1f)
     {
-        // Initialize arrays with correct dimensions
         Grid = new CellType[height, width];
         HorizontalClues = new int[height, width];
         VerticalClues = new int[height, width];
         solution = new int[height, width];
 
-        GenerateRandomLayout(random);
+        GenerateRandomLayout(random, blockedProbability);
         GenerateValidSolution(random);
         CalculateClues();
+
     }
 
-    void GenerateRandomLayout(System.Random random)
+    void GenerateRandomLayout(System.Random random, float blockedProbability)
     {
-        // Randomly place blocked cells (25% probability)
         for (int i = 0; i < Grid.GetLength(0); i++)
         {
             for (int j = 0; j < Grid.GetLength(1); j++)
             {
-                Grid[i, j] = (random.NextDouble() < 0.25f) ?
+                Grid[i, j] = (random.NextDouble() < blockedProbability) ?
                     CellType.Blocked :
                     CellType.White;
             }
         }
 
-        // Ensure first row and column have blocked cells
         for (int i = 0; i < Grid.GetLength(0); i++) Grid[i, 0] = CellType.Blocked;
         for (int j = 0; j < Grid.GetLength(1); j++) Grid[0, j] = CellType.Blocked;
     }

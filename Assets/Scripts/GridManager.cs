@@ -16,13 +16,48 @@ public class GridManager : MonoBehaviour
     [Range(5, 12)] public int gridSize = 5;
     [Range(0.1f, 0.4f)] public float blockedCellProbability = 0.2f;
 
+    [Header("AI Tracker")]
+    public TMP_Text elapsedTimeText;
+    public TMP_Text mistakesText;
+    public TMP_Text hintsText;
+    public TMP_Text difficultyText;
+
+
     private Kakuro kakuroPuzzle;
     private List<List<TMP_InputField>> inputFields = new List<List<TMP_InputField>>();
     private int cellSize = 80;
+    private AITracker tracker = new AITracker();
+    private float puzzleStartTime;
+    private AdaptiveDifficultyManager adaptiveManager = new AdaptiveDifficultyManager();
+
 
     void Start()
     {
         InitializeGrid();
+        puzzleStartTime = Time.time;
+    }
+
+    void Update()
+    {
+        tracker.AddElapsedTime(Time.deltaTime);
+        UpdateTrackerUI();
+    }
+
+    void UpdateTrackerUI()
+    {
+        // Example: update UI Text elements that display:
+        // - Elapsed time
+        // - Mistakes count
+        // - Hints used
+        // This assumes you have public references to UI Text components.
+        elapsedTimeText.text = "Time: " + Mathf.FloorToInt(tracker.elapsedTime) + "s";
+        mistakesText.text = "Mistakes: " + tracker.mistakes;
+        hintsText.text = "Hints: " + tracker.hintsUsed;
+    }
+
+    void UpdateDifficultyUI()
+    {
+        difficultyText.text = "Difficulty: " + adaptiveManager.CurrentDifficulty.ToString();
     }
 
     void InitializeGrid()
@@ -31,6 +66,29 @@ public class GridManager : MonoBehaviour
         SetupGridLayout();
         CreateGridUI();
     }
+
+    public void OnHintButtonPressed()
+    {
+        tracker.RecordHint();
+        List<(int row, int col)> whiteCells = new List<(int, int)>();
+        for (int i = 0; i < gridSize; i++)
+        {
+            for (int j = 0; j < gridSize; j++)
+            {
+                if (kakuroPuzzle.Grid[i, j] == Kakuro.CellType.White &&
+                    string.IsNullOrEmpty(inputFields[i][j].text))
+                {
+                    whiteCells.Add((i, j));
+                }
+            }
+        }
+        if (whiteCells.Count > 0)
+        {
+            var (row, col) = whiteCells[UnityEngine.Random.Range(0, whiteCells.Count)];
+            inputFields[row][col].text = kakuroPuzzle.GetSolution(row, col).ToString();
+        }
+    }
+
 
     void SetupGridLayout()
     {
@@ -142,6 +200,7 @@ public class GridManager : MonoBehaviour
         else
         {
             field.text = "";
+            tracker.RecordMistake();
             StartCoroutine(FlashError(field));
         }
     }
@@ -306,6 +365,26 @@ public class GridManager : MonoBehaviour
 
     public void NewPuzzle()
     {
-        InitializeGrid();
+        // Adjust difficulty based on current performance
+        adaptiveManager.AdjustDifficulty(tracker);
+
+        // Get adjusted settings based on current difficulty
+        int adjustedGridSize = adaptiveManager.GetAdjustedGridSize(gridSize);
+        float adjustedBlockedProbability = adaptiveManager.GetAdjustedBlockedProbability(blockedCellProbability);
+
+        // Reset the tracker for the new puzzle
+        tracker.Reset();
+        puzzleStartTime = Time.time;
+
+        // Create a new Kakuro puzzle with updated parameters
+        kakuroPuzzle = new Kakuro(adjustedGridSize, adjustedGridSize, new System.Random(), adjustedBlockedProbability);
+
+        // Optionally update UI elements related to grid size here (e.g., update gridLayout.constraintCount)
+        SetupGridLayout();
+        CreateGridUI();
+
+        // Update any difficulty indicators on the UI (see below)
+        UpdateDifficultyUI();
     }
+
 }
