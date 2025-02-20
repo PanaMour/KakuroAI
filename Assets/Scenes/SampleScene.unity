@@ -430,7 +430,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 742783859}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 1149079627}
+        m_TargetAssemblyTypeName: GridManager, Assembly-CSharp
+        m_MethodName: OnHintButtonPressed
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &742783859
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -551,7 +563,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 792029713}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 1149079626}
+        m_TargetAssemblyTypeName: 
+        m_MethodName: 
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: 
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &792029713
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -806,7 +830,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1016686937}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 1149079627}
+        m_TargetAssemblyTypeName: GridManager, Assembly-CSharp
+        m_MethodName: NewPuzzle
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &1016686937
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -946,7 +982,11 @@ MonoBehaviour:
   gridPanel: {fileID: 1416841281}
   gridLayout: {fileID: 1416841282}
   gridSize: 5
-  blockedCellProbability: 0.19
+  blockedCellProbability: 0.4
+  elapsedTimeText: {fileID: 2086153740}
+  mistakesText: {fileID: 192689644}
+  hintsText: {fileID: 1937125538}
+  difficultyText: {fileID: 1886116776}
 --- !u!4 &1149079628
 Transform:
   m_ObjectHideFlags: 0
