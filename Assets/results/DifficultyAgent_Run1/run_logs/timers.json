@@ -1,0 +1,42 @@
+{
+    "name": "root",
+    "metadata": {
+        "timer_format_version": "0.1.0",
+        "start_time_seconds": "1741358484",
+        "python_version": "3.8.10 (tags/v3.8.10:3d8993a, May  3 2021, 11:48:03) [MSC v.1928 64 bit (AMD64)]",
+        "command_line_arguments": "C:\\Users\\pmourlas\\AppData\\Local\\Programs\\Python\\Python38\\Scripts\\mlagents-learn config/trainer_config.yaml --run-id=DifficultyAgent_Run1 --force",
+        "mlagents_version": "0.29.0",
+        "mlagents_envs_version": "0.29.0",
+        "communication_protocol_version": "1.5.0",
+        "pytorch_version": "2.4.1+cpu",
+        "numpy_version": "1.21.2",
+        "end_time_seconds": "1741358548"
+    },
+    "total": 63.5073105,
+    "count": 1,
+    "self": 0.02348850000000624,
+    "children": {
+        "run_training.setup": {
+            "total": 0.19716440000000013,
+            "count": 1,
+            "self": 0.19716440000000013
+        },
+        "TrainerController.start_learning": {
+            "total": 63.2866576,
+            "count": 1,
+            "self": 0.00016419999999328638,
+            "children": {
+                "TrainerController._reset_env": {
+                    "total": 63.2864468,
+                    "count": 1,
+                    "self": 63.2864468
+                },
+                "TrainerController._save_models": {
+                    "total": 4.660000000455966e-05,
+                    "count": 1,
+                    "self": 4.660000000455966e-05
+                }
+            }
+        }
+    }
+}
