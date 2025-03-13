@@ -4,7 +4,8 @@ public enum DifficultyLevel { Easy, Medium, Hard }
 
 public class AdaptiveDifficultyManager
 {
-    public DifficultyLevel CurrentDifficulty { get; private set; } = DifficultyLevel.Medium;
+    // Using a public setter here so that our agent can update the difficulty.
+    public DifficultyLevel CurrentDifficulty { get; set; } = DifficultyLevel.Medium;
 
     public void AdjustDifficulty(AITracker tracker)
     {

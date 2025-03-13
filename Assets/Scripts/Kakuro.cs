@@ -10,7 +10,7 @@ public class Kakuro
     public int[,] VerticalClues { get; private set; }
     private int[,] solution;
 
-    public Kakuro(int width, int height, System.Random random,float blockedProbability = 0.1f)
+    public Kakuro(int width, int height, System.Random random, float blockedProbability = 0.1f)
     {
         Grid = new CellType[height, width];
         HorizontalClues = new int[height, width];
@@ -20,7 +20,6 @@ public class Kakuro
         GenerateRandomLayout(random, blockedProbability);
         GenerateValidSolution(random);
         CalculateClues();
-
     }
 
     void GenerateRandomLayout(System.Random random, float blockedProbability)
@@ -34,14 +33,16 @@ public class Kakuro
                     CellType.White;
             }
         }
-
-        for (int i = 0; i < Grid.GetLength(0); i++) Grid[i, 0] = CellType.Blocked;
-        for (int j = 0; j < Grid.GetLength(1); j++) Grid[0, j] = CellType.Blocked;
+        // Ensure first row and column are blocked
+        for (int i = 0; i < Grid.GetLength(0); i++)
+            Grid[i, 0] = CellType.Blocked;
+        for (int j = 0; j < Grid.GetLength(1); j++)
+            Grid[0, j] = CellType.Blocked;
     }
 
     void GenerateValidSolution(System.Random random)
     {
-        // Backtracking algorithm to fill white cells
+        // Backtracking algorithm to fill white cells.
         List<(int, int)> cellsToFill = new List<(int, int)>();
         for (int i = 0; i < Grid.GetLength(0); i++)
             for (int j = 0; j < Grid.GetLength(1); j++)
@@ -53,7 +54,8 @@ public class Kakuro
 
     bool FillCells(List<(int, int)> cells, int index, System.Random random)
     {
-        if (index >= cells.Count) return true;
+        if (index >= cells.Count)
+            return true;
 
         var (row, col) = cells[index];
         List<int> numbers = new List<int> { 1, 2, 3, 4, 5, 6, 7, 8, 9 };
@@ -74,12 +76,12 @@ public class Kakuro
 
     bool IsValidPlacement(int row, int col, int num)
     {
-        // Check horizontal run
         List<int> horizontalNumbers = new List<int>();
         int c = col;
         while (c >= 0 && Grid[row, c] == CellType.White)
         {
-            if (c != col) horizontalNumbers.Add(solution[row, c]);
+            if (c != col)
+                horizontalNumbers.Add(solution[row, c]);
             c--;
         }
         c = col + 1;
@@ -88,14 +90,15 @@ public class Kakuro
             horizontalNumbers.Add(solution[row, c]);
             c++;
         }
-        if (horizontalNumbers.Contains(num)) return false;
+        if (horizontalNumbers.Contains(num))
+            return false;
 
-        // Check vertical run
         List<int> verticalNumbers = new List<int>();
         int r = row;
         while (r >= 0 && Grid[r, col] == CellType.White)
         {
-            if (r != row) verticalNumbers.Add(solution[r, col]);
+            if (r != row)
+                verticalNumbers.Add(solution[r, col]);
             r--;
         }
         r = row + 1;
@@ -107,7 +110,6 @@ public class Kakuro
         return !verticalNumbers.Contains(num);
     }
 
-
     void CalculateClues()
     {
         for (int i = 0; i < Grid.GetLength(0); i++)
@@ -116,7 +118,7 @@ public class Kakuro
             {
                 if (Grid[i, j] == CellType.Blocked)
                 {
-                    // Horizontal clue calculation
+                    // Calculate horizontal clue.
                     int hSum = 0;
                     int c = j + 1;
                     while (c < Grid.GetLength(1) && Grid[i, c] == CellType.White)
@@ -126,7 +128,7 @@ public class Kakuro
                     }
                     HorizontalClues[i, j] = hSum;
 
-                    // Vertical clue calculation
+                    // Calculate vertical clue.
                     int vSum = 0;
                     int r = i + 1;
                     while (r < Grid.GetLength(0) && Grid[r, j] == CellType.White)

@@ -16,20 +16,21 @@ public class GridManager : MonoBehaviour
     [Range(5, 12)] public int gridSize = 5;
     [Range(0.1f, 0.4f)] public float blockedCellProbability = 0.2f;
 
-    [Header("AI Tracker")]
+    [Header("AI Tracker UI")]
     public TMP_Text elapsedTimeText;
     public TMP_Text mistakesText;
     public TMP_Text hintsText;
     public TMP_Text difficultyText;
 
+    // Exposed for access by the agent.
+    public Kakuro kakuroPuzzle { get; private set; }
+    public AITracker Tracker { get { return tracker; } }
+    public AdaptiveDifficultyManager adaptiveManager = new AdaptiveDifficultyManager();
 
-    private Kakuro kakuroPuzzle;
     private List<List<TMP_InputField>> inputFields = new List<List<TMP_InputField>>();
     private int cellSize = 80;
     private AITracker tracker = new AITracker();
     private float puzzleStartTime;
-    private AdaptiveDifficultyManager adaptiveManager = new AdaptiveDifficultyManager();
-
 
     void Start()
     {
@@ -45,11 +46,6 @@ public class GridManager : MonoBehaviour
 
     void UpdateTrackerUI()
     {
-        // Example: update UI Text elements that display:
-        // - Elapsed time
-        // - Mistakes count
-        // - Hints used
-        // This assumes you have public references to UI Text components.
         elapsedTimeText.text = "Time: " + Mathf.FloorToInt(tracker.elapsedTime) + "s";
         mistakesText.text = "Mistakes: " + tracker.mistakes;
         hintsText.text = "Hints: " + tracker.hintsUsed;
@@ -89,23 +85,18 @@ public class GridManager : MonoBehaviour
         }
     }
 
-
     void SetupGridLayout()
     {
         gridLayout.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
         gridLayout.constraintCount = gridSize;
 
-        // Calculate available space for the grid
         float panelWidth = gridPanel.rect.width;
         float panelHeight = gridPanel.rect.height;
 
-        // Calculate cell size based on available space and grid size
         float cellWidth = (panelWidth - (gridLayout.spacing.x * (gridSize - 1))) / gridSize;
         float cellHeight = (panelHeight - (gridLayout.spacing.y * (gridSize - 1))) / gridSize;
 
-        // Use the smaller dimension to ensure cells are square and fit within the panel
         cellSize = Mathf.Min((int)cellWidth, (int)cellHeight);
-
         gridLayout.cellSize = new Vector2(cellSize, cellSize);
     }
 
@@ -122,11 +113,9 @@ public class GridManager : MonoBehaviour
     {
         ClearGrid();
         inputFields.Clear();
-
         for (int row = 0; row < gridSize; row++)
         {
             inputFields.Add(new List<TMP_InputField>());
-
             for (int col = 0; col < gridSize; col++)
             {
                 GameObject cell = Instantiate(gridCellPrefab, gridPanel);
@@ -142,15 +131,10 @@ public class GridManager : MonoBehaviour
         TMP_InputField inputField = cell.GetComponentInChildren<TMP_InputField>();
 
         AdjustFontSize(inputField);
-
         if (kakuroPuzzle.Grid[row, col] == Kakuro.CellType.Blocked)
-        {
             SetupBlockedCell(cell, row, col, cellImage, inputField);
-        }
         else
-        {
             SetupInputCell(cell, row, col, cellImage, inputField);
-        }
     }
 
     void SetupBlockedCell(GameObject cell, int row, int col, Image cellImage, TMP_InputField inputField)
@@ -161,19 +145,14 @@ public class GridManager : MonoBehaviour
         TextMeshProUGUI verticalClue = cell.transform.Find("VerticalClue").GetComponent<TextMeshProUGUI>();
         TextMeshProUGUI horizontalClue = cell.transform.Find("HorizontalClue").GetComponent<TextMeshProUGUI>();
 
-        verticalClue.text = kakuroPuzzle.VerticalClues[row, col] > 0 ?
-            kakuroPuzzle.VerticalClues[row, col].ToString() : "";
+        verticalClue.text = kakuroPuzzle.VerticalClues[row, col] > 0 ? kakuroPuzzle.VerticalClues[row, col].ToString() : "";
         verticalClue.gameObject.SetActive(true);
-
-        horizontalClue.text = kakuroPuzzle.HorizontalClues[row, col] > 0 ?
-            kakuroPuzzle.HorizontalClues[row, col].ToString() : "";
+        horizontalClue.text = kakuroPuzzle.HorizontalClues[row, col] > 0 ? kakuroPuzzle.HorizontalClues[row, col].ToString() : "";
         horizontalClue.gameObject.SetActive(true);
 
         Image diagonalLine = cell.transform.Find("DiagonalLine").GetComponent<Image>();
-
         RectTransform lineRect = diagonalLine.GetComponent<RectTransform>();
         lineRect.sizeDelta = new Vector2(2, Mathf.Sqrt(2) * cellSize * 0.9f);
-
         diagonalLine.transform.SetAsFirstSibling();
     }
 
@@ -181,12 +160,9 @@ public class GridManager : MonoBehaviour
     {
         cellImage.color = Color.white;
         inputField.gameObject.SetActive(true);
-
         cell.transform.Find("VerticalClue").gameObject.SetActive(false);
         cell.transform.Find("HorizontalClue").gameObject.SetActive(false);
-
         inputField.text = "";
-
         inputField.onEndEdit.AddListener((value) => HandleInput(value, row, col, inputField));
     }
 
@@ -220,11 +196,8 @@ public class GridManager : MonoBehaviour
     void ValidateRun(int row, int col)
     {
         int horizontalStartCol = col;
-        while (horizontalStartCol >= 0 &&
-               kakuroPuzzle.Grid[row, horizontalStartCol] != Kakuro.CellType.Blocked)
-        {
+        while (horizontalStartCol >= 0 && kakuroPuzzle.Grid[row, horizontalStartCol] != Kakuro.CellType.Blocked)
             horizontalStartCol--;
-        }
 
         if (horizontalStartCol >= 0 && horizontalStartCol < kakuroPuzzle.Grid.GetLength(1))
         {
@@ -232,53 +205,33 @@ public class GridManager : MonoBehaviour
             int horizontalSum = 0;
             List<TMP_InputField> horizontalCells = new List<TMP_InputField>();
             HashSet<int> uniqueNumbers = new HashSet<int>();
-
             bool hasDuplicates = false;
-            for (int c = horizontalStartCol + 1;
-                 c < kakuroPuzzle.Grid.GetLength(1) &&
-                 kakuroPuzzle.Grid[row, c] == Kakuro.CellType.White;
-                 c++)
+            for (int c = horizontalStartCol + 1; c < kakuroPuzzle.Grid.GetLength(1) && kakuroPuzzle.Grid[row, c] == Kakuro.CellType.White; c++)
             {
                 int val = GetCellValue(row, c);
                 horizontalSum += val;
-
                 if (val != 0 && !uniqueNumbers.Add(val))
-                {
                     hasDuplicates = true;
-                }
-
                 horizontalCells.Add(inputFields[row][c]);
             }
-
             Color statusColor = Color.white;
             if (horizontalClue > 0)
             {
                 if (hasDuplicates)
-                {
                     statusColor = Color.red;
-                }
                 else if (horizontalSum == horizontalClue)
-                {
                     statusColor = Color.green;
-                }
                 else if (horizontalSum > horizontalClue)
-                {
                     statusColor = Color.red;
-                }
                 else
-                {
                     statusColor = new Color(1, 0.5f, 0); // Orange
-                }
-
                 UpdateCellColors(horizontalCells, statusColor);
             }
         }
+
         int verticalStartRow = row;
-        while (verticalStartRow >= 0 &&
-               kakuroPuzzle.Grid[verticalStartRow, col] != Kakuro.CellType.Blocked)
-        {
+        while (verticalStartRow >= 0 && kakuroPuzzle.Grid[verticalStartRow, col] != Kakuro.CellType.Blocked)
             verticalStartRow--;
-        }
 
         if (verticalStartRow >= 0 && verticalStartRow < kakuroPuzzle.Grid.GetLength(0))
         {
@@ -286,58 +239,35 @@ public class GridManager : MonoBehaviour
             int verticalSum = 0;
             List<TMP_InputField> verticalCells = new List<TMP_InputField>();
             HashSet<int> verticalNumbers = new HashSet<int>();
-
             bool hasVerticalDuplicates = false;
-            for (int r = verticalStartRow + 1;
-                 r < kakuroPuzzle.Grid.GetLength(0) &&
-                 kakuroPuzzle.Grid[r, col] == Kakuro.CellType.White;
-                 r++)
+            for (int r = verticalStartRow + 1; r < kakuroPuzzle.Grid.GetLength(0) && kakuroPuzzle.Grid[r, col] == Kakuro.CellType.White; r++)
             {
                 int val = GetCellValue(r, col);
                 verticalSum += val;
-
                 if (val != 0 && !verticalNumbers.Add(val))
-                {
                     hasVerticalDuplicates = true;
-                }
-
                 verticalCells.Add(inputFields[r][col]);
             }
-
             Color verticalColor = Color.white;
             if (verticalClue > 0)
             {
                 if (hasVerticalDuplicates)
-                {
                     verticalColor = Color.red;
-                }
                 else if (verticalSum == verticalClue)
-                {
                     verticalColor = Color.green;
-                }
                 else if (verticalSum > verticalClue)
-                {
                     verticalColor = Color.red;
-                }
                 else
-                {
                     verticalColor = new Color(1, 0.5f, 0); // Orange
-                }
-
                 UpdateCellColors(verticalCells, verticalColor);
             }
         }
-
     }
 
     int GetCellValue(int row, int col)
     {
-        if (row < 0 || row >= inputFields.Count ||
-            col < 0 || col >= inputFields[row].Count)
-        {
+        if (row < 0 || row >= inputFields.Count || col < 0 || col >= inputFields[row].Count)
             return 0;
-        }
-
         return int.TryParse(inputFields[row][col].text, out int val) ? val : 0;
     }
 
@@ -347,9 +277,7 @@ public class GridManager : MonoBehaviour
         {
             Image background = GetCellBackground(cell);
             if (background != null)
-            {
                 background.color = color;
-            }
         }
     }
 
@@ -358,33 +286,22 @@ public class GridManager : MonoBehaviour
         foreach (Transform child in gridPanel)
         {
             Image img = child.GetComponent<Image>();
-            if (img != null) img.color = Color.white;
+            if (img != null)
+                img.color = Color.white;
             Destroy(child.gameObject);
         }
     }
 
     public void NewPuzzle()
     {
-        // Adjust difficulty based on current performance
         adaptiveManager.AdjustDifficulty(tracker);
-
-        // Get adjusted settings based on current difficulty
         int adjustedGridSize = adaptiveManager.GetAdjustedGridSize(gridSize);
         float adjustedBlockedProbability = adaptiveManager.GetAdjustedBlockedProbability(blockedCellProbability);
-
-        // Reset the tracker for the new puzzle
         tracker.Reset();
         puzzleStartTime = Time.time;
-
-        // Create a new Kakuro puzzle with updated parameters
         kakuroPuzzle = new Kakuro(adjustedGridSize, adjustedGridSize, new System.Random(), adjustedBlockedProbability);
-
-        // Optionally update UI elements related to grid size here (e.g., update gridLayout.constraintCount)
         SetupGridLayout();
         CreateGridUI();
-
-        // Update any difficulty indicators on the UI (see below)
         UpdateDifficultyUI();
     }
-
 }
