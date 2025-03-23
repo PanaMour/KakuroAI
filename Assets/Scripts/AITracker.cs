@@ -19,6 +19,14 @@ public class AITracker
         hintsUsed++;
     }
 
+    // New method to update all stats at once
+    public void UpdateStats(float newElapsedTime, int newMistakes, int newHints)
+    {
+        elapsedTime = newElapsedTime;
+        mistakes = newMistakes;
+        hintsUsed = newHints;
+    }
+
     public void Reset()
     {
         mistakes = 0;

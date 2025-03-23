@@ -13,7 +13,7 @@ public class GridManager : MonoBehaviour
     public GridLayoutGroup gridLayout;
 
     [Header("Game Settings")]
-    [Range(5, 12)] public int gridSize = 5;
+    [Range(4, 7)] public int gridSize = 5;
     [Range(0.1f, 0.4f)] public float blockedCellProbability = 0.2f;
 
     [Header("AI Tracker UI")]
@@ -294,14 +294,16 @@ public class GridManager : MonoBehaviour
 
     public void NewPuzzle()
     {
-        adaptiveManager.AdjustDifficulty(tracker);
-        int adjustedGridSize = adaptiveManager.GetAdjustedGridSize(gridSize);
-        float adjustedBlockedProbability = adaptiveManager.GetAdjustedBlockedProbability(blockedCellProbability);
+        // Use the CURRENT difficulty set by the AGENT (no rules)
+        gridSize = adaptiveManager.GetAdjustedGridSize(adaptiveManager.CurrentDifficulty);
+        blockedCellProbability = adaptiveManager.GetAdjustedBlockedProbability(adaptiveManager.CurrentDifficulty);
+
+        // Reset and generate new puzzle
         tracker.Reset();
-        puzzleStartTime = Time.time;
-        kakuroPuzzle = new Kakuro(adjustedGridSize, adjustedGridSize, new System.Random(), adjustedBlockedProbability);
+        kakuroPuzzle = new Kakuro(gridSize, gridSize, new System.Random(), blockedCellProbability);
         SetupGridLayout();
         CreateGridUI();
         UpdateDifficultyUI();
     }
+
 }

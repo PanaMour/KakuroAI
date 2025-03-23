@@ -18,7 +18,7 @@ public class KakuroSolver
     /// counts a hint usage, and accepts the correct digit immediately.
     /// Returns a tuple (solveTime, mistakes, hintsUsed).
     /// </summary>
-    public (float solveTime, int mistakes, int hintsUsed) Solve(Kakuro puzzle, System.Random random)
+    public (float solveTime, int mistakes, int hintsUsed) Solve(Kakuro puzzle, System.Random random, DifficultyLevel difficulty)
     {
         int mistakes = 0;
         int hintsUsed = 0;
@@ -26,6 +26,14 @@ public class KakuroSolver
 
         int rows = puzzle.Grid.GetLength(0);
         int cols = puzzle.Grid.GetLength(1);
+
+        float baseTimePerGuess = 0.1f;
+
+        // Increase time cost if difficulty is Hard
+        if (difficulty == DifficultyLevel.Hard)
+            baseTimePerGuess *= 1.5f;
+        else if (difficulty == DifficultyLevel.Easy)
+            baseTimePerGuess *= 0.8f;
 
         for (int row = 0; row < rows; row++)
         {
