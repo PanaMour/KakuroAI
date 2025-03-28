@@ -294,16 +294,33 @@ public class GridManager : MonoBehaviour
 
     public void NewPuzzle()
     {
-        // Use the CURRENT difficulty set by the AGENT (no rules)
+        // If performance data exists (i.e. the tracker is nonzero), update the difficulty.
+        if (tracker.elapsedTime > 0.1f || tracker.mistakes > 0 || tracker.hintsUsed > 0)
+        {
+            // Update the current difficulty based on the previous performance.
+            DifficultyLevel updatedDifficulty = adaptiveManager.UpdateDifficulty(
+                adaptiveManager.CurrentDifficulty,
+                tracker.elapsedTime,
+                tracker.mistakes,
+                tracker.hintsUsed);
+            adaptiveManager.CurrentDifficulty = updatedDifficulty;
+        }
+
+        // Set grid size and blocked probability based on the (updated) current difficulty.
         gridSize = adaptiveManager.GetAdjustedGridSize(adaptiveManager.CurrentDifficulty);
         blockedCellProbability = adaptiveManager.GetAdjustedBlockedProbability(adaptiveManager.CurrentDifficulty);
 
-        // Reset and generate new puzzle
+        // Reset tracker for the new puzzle.
         tracker.Reset();
+
+        // Generate the new puzzle with updated parameters.
         kakuroPuzzle = new Kakuro(gridSize, gridSize, new System.Random(), blockedCellProbability);
         SetupGridLayout();
         CreateGridUI();
         UpdateDifficultyUI();
+
+        Debug.Log($"New Puzzle Generated: GridSize = {gridSize}, Difficulty = {adaptiveManager.CurrentDifficulty}");
     }
+
 
 }

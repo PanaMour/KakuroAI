@@ -4,49 +4,76 @@ public enum DifficultyLevel { Easy, Medium, Hard }
 
 public class AdaptiveDifficultyManager
 {
-    // The current difficulty level; this can be updated by your agent.
+    // The current difficulty level; this can be updated by your agent or the adaptive update.
     public DifficultyLevel CurrentDifficulty { get; set; } = DifficultyLevel.Medium;
 
-    public void AdjustDifficulty(AITracker tracker)
+    // Updates difficulty based on the performance of the previous puzzle.
+    public DifficultyLevel UpdateDifficulty(DifficultyLevel currentDifficulty, float solveTime, int mistakes, int hints)
     {
-        //Debug.Log($"Mistakes = {tracker.mistakes}, Elapsed Time = {tracker.elapsedTime}");
-        if (tracker.mistakes > 30 || tracker.elapsedTime > 15f)
-        {
-            CurrentDifficulty = DifficultyLevel.Easy;
-        }
-        else if (tracker.mistakes < 15 && tracker.elapsedTime < 10f)
-        {
-            CurrentDifficulty = DifficultyLevel.Hard;
-        }
+        // Define a performance score: lower is better.
+        // Weigh solve time, mistakes, and hints appropriately.
+        float performance = solveTime + mistakes * 0.1f + hints * 0.2f;
+
+        // Define thresholds for a "fast" performance and a "slow" performance.
+        // (These numbers are arbitrary; you’ll likely need to tune them.)
+        string rating;
+        if (performance < 10f)
+            rating = "fast";
+        else if (performance < 20f)
+            rating = "medium";
         else
+            rating = "slow";
+
+        // Apply a state-machine transition:
+        // - If current difficulty is Easy:
+        //     - If performance is fast, then upgrade to Medium.
+        //     - Otherwise, stay Easy.
+        // - If current difficulty is Medium:
+        //     - If performance is fast, upgrade to Hard.
+        //     - If performance is slow, downgrade to Easy.
+        //     - Otherwise, remain Medium.
+        // - If current difficulty is Hard:
+        //     - If performance is slow, downgrade to Medium.
+        //     - Otherwise, remain Hard.
+        switch (currentDifficulty)
         {
-            CurrentDifficulty = DifficultyLevel.Medium;
+            case DifficultyLevel.Easy:
+                return (rating == "fast") ? DifficultyLevel.Medium : DifficultyLevel.Easy;
+            case DifficultyLevel.Medium:
+                if (rating == "fast")
+                    return DifficultyLevel.Hard;
+                else if (rating == "slow")
+                    return DifficultyLevel.Easy;
+                else
+                    return DifficultyLevel.Medium;
+            case DifficultyLevel.Hard:
+                return (rating == "slow") ? DifficultyLevel.Medium : DifficultyLevel.Hard;
+            default:
+                return currentDifficulty;
         }
     }
 
-    // Adjust grid size based on the current difficulty.
-    // If performance is poor (Easy), reduce grid size by 1 (minimum 4).
-    // If performance is good (Hard), increase grid size by 1 (maximum 7).
-    // For Medium, keep grid size unchanged.
+    // Map difficulty to grid size.
     public int GetAdjustedGridSize(DifficultyLevel difficulty)
     {
         switch (difficulty)
         {
-            case DifficultyLevel.Hard: return 7;
             case DifficultyLevel.Easy: return 4;
-            default: return 5; // Medium
+            case DifficultyLevel.Medium: return 5;
+            case DifficultyLevel.Hard: return 6;
+            default: return 5;
         }
     }
 
-    // Blocked probability tied directly to difficulty.
+    // Map difficulty to blocked-cell probability.
     public float GetAdjustedBlockedProbability(DifficultyLevel difficulty)
     {
         switch (difficulty)
         {
-            case DifficultyLevel.Hard: return 0.3f; // More complex
-            case DifficultyLevel.Easy: return 0.1f; // Simpler
-            default: return 0.2f; // Medium
+            case DifficultyLevel.Easy: return 0.4f;  // Simpler puzzles: more blocked cells.
+            case DifficultyLevel.Medium: return 0.2f;
+            case DifficultyLevel.Hard: return 0.1f;  // Harder puzzles: fewer blocked cells.
+            default: return 0.2f;
         }
     }
-
 }

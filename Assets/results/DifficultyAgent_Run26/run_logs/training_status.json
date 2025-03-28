@@ -1,0 +1,29 @@
+{
+    "DifficultyAgent": {
+        "checkpoints": [
+            {
+                "steps": 182,
+                "file_path": "results\\DifficultyAgent_Run26\\DifficultyAgent\\DifficultyAgent-182.onnx",
+                "reward": 0.10000000149011612,
+                "creation_time": 1742835560.6722786,
+                "auxillary_file_paths": [
+                    "results\\DifficultyAgent_Run26\\DifficultyAgent\\DifficultyAgent-182.pt"
+                ]
+            }
+        ],
+        "final_checkpoint": {
+            "steps": 182,
+            "file_path": "results\\DifficultyAgent_Run26\\DifficultyAgent.onnx",
+            "reward": 0.10000000149011612,
+            "creation_time": 1742835560.6722786,
+            "auxillary_file_paths": [
+                "results\\DifficultyAgent_Run26\\DifficultyAgent\\DifficultyAgent-182.pt"
+            ]
+        }
+    },
+    "metadata": {
+        "stats_format_version": "0.3.0",
+        "mlagents_version": "0.29.0",
+        "torch_version": "2.1.0+cpu"
+    }
+}

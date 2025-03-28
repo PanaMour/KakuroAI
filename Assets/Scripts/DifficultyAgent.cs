@@ -25,7 +25,7 @@ public class DifficultyAgent : Agent
 
     public override void OnEpisodeBegin()
     {
-        // For both training and live play, generate a new puzzle.
+        Debug.Log("==== NEW EPISODE STARTED ====");
         gridManager.NewPuzzle();
     }
 
@@ -55,19 +55,34 @@ public class DifficultyAgent : Agent
 
     private IEnumerator ProcessEpisode(DifficultyLevel chosenDifficulty)
     {
-        yield return new WaitForSeconds(0.1f);
+        // 1. Force valid solver outputs (debug)
+        float solveTime = 10f;
+        int mistakes = 1;
+        int hints = 0;
 
-        var (solveTime, mistakes, hints) = solver.Solve(gridManager.kakuroPuzzle, random, chosenDifficulty);
-        gridManager.Tracker.UpdateStats(solveTime, mistakes, hints);
+        try
+        {
+            var result = solver.Solve(gridManager.kakuroPuzzle, random, chosenDifficulty);
+            solveTime = result.solveTime;
+            mistakes = result.mistakes;
+            hints = result.hintsUsed;
+            Debug.Log($"Solver OK | Time: {solveTime}, Mistakes: {mistakes}, Hints: {hints}");
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"Solver crashed: {e}");
+        }
 
-        // Pass all 4 parameters including chosenDifficulty
+        // 2. Simplified reward (always non-zero)
         float reward = ComputeReward(solveTime, mistakes, hints, chosenDifficulty);
+
+        // 3. Log and apply
+        Debug.Log($"Final reward: {reward}");
         AddReward(reward);
 
-        Debug.Log($"Episode Ended - Difficulty: {chosenDifficulty}, SolveTime: {solveTime:F2}s, Mistakes: {mistakes}, Hints: {hints}, Reward: {reward}");
+        yield return null; // Ensure coroutine runs
         EndEpisode();
     }
-
     // This method is called by a UI button when the player finishes a puzzle.
     public void OnPlayerFinishedPuzzle(float playerSolveTime, int playerMistakes, int playerHints)
     {
@@ -95,14 +110,19 @@ public class DifficultyAgent : Agent
             discreteActions[0] = 1; // Default to Medium
     }
 
-    // Updated reward function that takes difficulty into account.
     private float ComputeReward(float solveTime, int mistakes, int hints, DifficultyLevel chosenDifficulty)
     {
-        float timeReward = Mathf.Clamp(1 - (solveTime / 30f), 0, 1);
-        float mistakePenalty = mistakes * 0.1f;
-        float hintPenalty = hints * 0.05f;
-        float difficultyBonus = (int)chosenDifficulty * 0.2f;
+        float baseReward = 1.0f;
 
-        return timeReward + difficultyBonus - mistakePenalty - hintPenalty;
+        float timePenalty = solveTime * 0.02f;
+        float mistakePenalty = mistakes * 0.005f;
+        float hintPenalty = hints * 0.005f;
+
+        float difficultyBonus = (int)chosenDifficulty * 0.1f;
+
+        float finalReward = baseReward + difficultyBonus - timePenalty - mistakePenalty - hintPenalty;
+        return finalReward;
     }
+
+
 }
