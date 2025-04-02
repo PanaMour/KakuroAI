@@ -1364,9 +1364,9 @@ MonoBehaviour:
   agentParameters:
     maxStep: 0
   hasUpgradedFromAgentParameters: 1
-  MaxStep: 1
+  MaxStep: 0
   gridManager: {fileID: 1149079627}
-  useSolver: 1
+  useSolver: 0
 --- !u!114 &1559247730
 MonoBehaviour:
   m_ObjectHideFlags: 0
