@@ -168,6 +168,9 @@ public class GridManager : MonoBehaviour
 
     void HandleInput(string value, int row, int col, TMP_InputField field)
     {
+        if (string.IsNullOrEmpty(value))
+            return;
+
         if (int.TryParse(value, out int num) && num >= 1 && num <= 9)
         {
             field.textComponent.color = Color.black;
