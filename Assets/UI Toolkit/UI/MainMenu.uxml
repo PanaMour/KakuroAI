@@ -1,19 +1,10 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
     <Style src="project://database/Assets/UI%20Toolkit/UI/MainMenu.uss?fileID=7433441132597879392&amp;guid=964babf8bc0ae404e8fa2c402706a568&amp;type=3#MainMenu" />
     <ui:VisualElement class="main-menu">
-        <ui:Label text="Adaptive Kakuro" class="title" />
+        <ui:Label text="KakuroAI" class="title" />
         <ui:Button text="Play" name="PlayButton" class="menu-button" />
         <ui:VisualElement class="menu-buttons">
-            <ui:Button text="Options" name="OptionsButton" class="menu-button" />
             <ui:Button text="Quit" name="QuitButton" class="menu-button" />
-        </ui:VisualElement>
-        <ui:VisualElement name="OptionsPanel" visible="false" class="options-panel" style="height: 333px; top: auto; width: 325px; left: auto;">
-            <ui:Label text="Options" class="options-title" />
-            <ui:Slider name="VolumeSlider" lowValue="0" highValue="1" value="0.8" class="option-slider" />
-            <ui:Label text="Volume" class="option-label" />
-            <ui:Slider name="BrightnessSlider" lowValue="0" highValue="1" value="0.8" class="option-slider" />
-            <ui:Label text="Brightness" class="option-label" />
-            <ui:Button text="Back" name="OptionsBackButton" class="menu-button" />
         </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>

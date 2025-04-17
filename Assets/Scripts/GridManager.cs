@@ -22,7 +22,6 @@ public class GridManager : MonoBehaviour
     public TMP_Text hintsText;
     public TMP_Text difficultyText;
 
-    // Exposed for access by the agent.
     public Kakuro kakuroPuzzle { get; private set; }
     public AITracker Tracker { get { return tracker; } }
     public AdaptiveDifficultyManager adaptiveManager = new AdaptiveDifficultyManager();
@@ -297,7 +296,7 @@ public class GridManager : MonoBehaviour
 
     public void NewPuzzle()
     {
-        // If performance data exists (i.e. the tracker is nonzero), update the difficulty.
+        // If performance data exists (tracker is nonzero), update the difficulty.
         if (tracker.elapsedTime > 0.1f || tracker.mistakes > 0 || tracker.hintsUsed > 0)
         {
             // Update the current difficulty based on the previous performance.

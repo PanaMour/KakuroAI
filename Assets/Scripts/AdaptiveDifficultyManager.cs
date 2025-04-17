@@ -4,18 +4,13 @@ public enum DifficultyLevel { Easy, Medium, Hard }
 
 public class AdaptiveDifficultyManager
 {
-    // The current difficulty level; this can be updated by your agent or the adaptive update.
     public DifficultyLevel CurrentDifficulty { get; set; } = DifficultyLevel.Medium;
 
     // Updates difficulty based on the performance of the previous puzzle.
     public DifficultyLevel UpdateDifficulty(DifficultyLevel currentDifficulty, float solveTime, int mistakes, int hints)
     {
-        // Define a performance score: lower is better.
-        // Weigh solve time, mistakes, and hints appropriately.
         float performance = solveTime + mistakes * 0.1f + hints * 0.2f;
 
-        // Define thresholds for a "fast" performance and a "slow" performance.
-        // (These numbers are arbitrary; you’ll likely need to tune them.)
         string rating;
         if (performance < 10f)
             rating = "fast";

@@ -7,7 +7,6 @@ using System.Collections;
 
 public class DifficultyAgent : Agent
 {
-    // Reference to your GridManager in the scene.
     public GridManager gridManager;
 
     private KakuroSolver solver;
@@ -31,7 +30,6 @@ public class DifficultyAgent : Agent
 
     public override void CollectObservations(VectorSensor sensor)
     {
-        // Normalize observations based on assumed maximums.
         sensor.AddObservation(gridManager.Tracker.mistakes / 10f);    // Mistakes
         sensor.AddObservation(gridManager.Tracker.elapsedTime / 300f); // Elapsed time
         sensor.AddObservation(gridManager.Tracker.hintsUsed / 10f);    // Hints used
@@ -45,17 +43,16 @@ public class DifficultyAgent : Agent
         }
 
         int action = actions.DiscreteActions[0];
-        var chosenDifficulty = (DifficultyLevel)action; // Store the chosen difficulty
+        var chosenDifficulty = (DifficultyLevel)action;
         gridManager.adaptiveManager.CurrentDifficulty = chosenDifficulty;
 
         gridManager.NewPuzzle();
 
-        StartCoroutine(ProcessEpisode(chosenDifficulty)); // Pass the difficulty here
+        StartCoroutine(ProcessEpisode(chosenDifficulty));
     }
 
     private IEnumerator ProcessEpisode(DifficultyLevel chosenDifficulty)
     {
-        // 1. Force valid solver outputs (debug)
         float solveTime = 10f;
         int mistakes = 1;
         int hints = 0;
@@ -73,22 +70,20 @@ public class DifficultyAgent : Agent
             Debug.LogError($"Solver crashed: {e}");
         }
 
-        // 2. Simplified reward (always non-zero)
+        // Simplified reward (always non-zero)
         float reward = ComputeReward(solveTime, mistakes, hints, chosenDifficulty);
 
-        // 3. Log and apply
         Debug.Log($"Final reward: {reward}");
         AddReward(reward);
 
-        yield return null; // Ensure coroutine runs
+        yield return null;
         EndEpisode();
     }
-    // This method is called by a UI button when the player finishes a puzzle.
+
     public void OnPlayerFinishedPuzzle(float playerSolveTime, int playerMistakes, int playerHints)
     {
         gridManager.Tracker.UpdateStats(playerSolveTime, playerMistakes, playerHints);
 
-        // Get current difficulty and pass all 4 parameters
         var currentDifficulty = gridManager.adaptiveManager.CurrentDifficulty;
         float reward = ComputeReward(playerSolveTime, playerMistakes, playerHints, currentDifficulty);
         AddReward(reward);

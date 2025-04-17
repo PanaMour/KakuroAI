@@ -5,19 +5,12 @@ public class KakuroSolver
 {
     private float timePerGuess;
 
-    // Set a default time cost per guess (e.g., 0.1 seconds)
+    // Set a default time cost per guess (0.1 seconds)
     public KakuroSolver(float timePerGuess = 0.1f)
     {
         this.timePerGuess = timePerGuess;
     }
 
-    /// <summary>
-    /// Solves the given Kakuro puzzle by guessing for each white cell.
-    /// For each cell, the solver increases its hint chance by 5% on each wrong guess.
-    /// If the random chance falls below the current hint chance, it uses a hint,
-    /// counts a hint usage, and accepts the correct digit immediately.
-    /// Returns a tuple (solveTime, mistakes, hintsUsed).
-    /// </summary>
     public (float solveTime, int mistakes, int hintsUsed) Solve(Kakuro puzzle, System.Random random, DifficultyLevel difficulty)
     {
         int mistakes = 0;
@@ -57,8 +50,7 @@ public class KakuroSolver
                         }
                         else
                         {
-                            // Make a guess.
-                            int guess = random.Next(1, 10); // Random guess between 1 and 9
+                            int guess = random.Next(1, 10);
                             totalGuesses++;
                             if (guess == correctDigit)
                             {
