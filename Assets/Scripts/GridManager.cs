@@ -2,6 +2,7 @@ using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
 using System.Collections.Generic;
+using UnityEngine.SceneManagement;
 
 public class GridManager : MonoBehaviour
 {
@@ -323,6 +324,41 @@ public class GridManager : MonoBehaviour
 
         Debug.Log($"New Puzzle Generated: GridSize = {gridSize}, Difficulty = {adaptiveManager.CurrentDifficulty}");
     }
+    public void OnBackToMainMenu()
+    {
+        SceneManager.LoadScene("MainMenu");
+    }
+    public void ClearUserInputs()
+    {
+        if (inputFields == null || inputFields.Count == 0)
+            return;
+        //tracker.Reset();
 
+        /*if (elapsedTimeText != null) elapsedTimeText.text = "Time: 0s";
+        if (mistakesText != null) mistakesText.text = "Mistakes: 0";
+        if (hintsText != null) hintsText.text = "Hints: 0";
+        if (difficultyText != null) difficultyText.text = "Difficulty: " + adaptiveManager.CurrentDifficulty;*/
 
+        for (int r = 0; r < inputFields.Count; r++)
+        {
+            var rowList = inputFields[r];
+            if (rowList == null) continue;
+
+            for (int c = 0; c < rowList.Count; c++)
+            {
+                var inputField = rowList[c];
+                if (inputField == null) continue;
+
+                if (!inputField.gameObject.activeSelf)
+                    continue;
+
+                inputField.text = "";
+                inputField.textComponent.color = Color.black;
+
+                var bg = inputField.GetComponentInParent<Image>();
+                if (bg != null)
+                    bg.color = Color.white;
+            }
+        }
+    }
 }
