@@ -1149,7 +1149,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 1149079627}
         m_TargetAssemblyTypeName: GridManager, Assembly-CSharp
-        m_MethodName: NewPuzzle
+        m_MethodName: OnNewPuzzleButton
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -1393,6 +1393,7 @@ MonoBehaviour:
   mistakesText: {fileID: 192689644}
   hintsText: {fileID: 1937125538}
   difficultyText: {fileID: 1886116776}
+  difficultyAgent: {fileID: 1559247729}
 --- !u!4 &1149079628
 Transform:
   m_ObjectHideFlags: 0
@@ -1732,7 +1733,6 @@ GameObject:
   - component: {fileID: 1559247728}
   - component: {fileID: 1559247730}
   - component: {fileID: 1559247729}
-  - component: {fileID: 1559247731}
   m_Layer: 0
   m_Name: DifficultyAgent
   m_TagString: Untagged
@@ -1795,28 +1795,14 @@ MonoBehaviour:
     VectorActionDescriptions: []
     VectorActionSpaceType: 0
     hasUpgradedBrainParametersWithActionSpec: 1
-  m_Model: {fileID: 5022602860645237092, guid: 193135b803868e0409e5d0d80e0a0d9f, type: 3}
+  m_Model: {fileID: 5022602860645237092, guid: 8d891668e959d204fa6243f5f8a9b8f5, type: 3}
   m_InferenceDevice: 3
-  m_BehaviorType: 0
+  m_BehaviorType: 2
   m_BehaviorName: DifficultyAgent
   TeamId: 0
   m_UseChildSensors: 1
   m_UseChildActuators: 1
   m_ObservableAttributeHandling: 0
---- !u!114 &1559247731
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1559247727}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3a5c9d521e5ef4759a8246a07d52221e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  DecisionPeriod: 5
-  TakeActionsBetweenDecisions: 1
 --- !u!1 &1697555934
 GameObject:
   m_ObjectHideFlags: 0

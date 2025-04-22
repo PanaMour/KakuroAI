@@ -31,6 +31,7 @@ public class GridManager : MonoBehaviour
     private int cellSize = 80;
     private AITracker tracker = new AITracker();
     private float puzzleStartTime;
+    public DifficultyAgent difficultyAgent;
 
     void Start()
     {
@@ -295,34 +296,38 @@ public class GridManager : MonoBehaviour
         }
     }
 
-    public void NewPuzzle()
+    public void BuildPuzzle()
     {
-        // If performance data exists (tracker is nonzero), update the difficulty.
-        if (tracker.elapsedTime > 0.1f || tracker.mistakes > 0 || tracker.hintsUsed > 0)
-        {
-            // Update the current difficulty based on the previous performance.
-            DifficultyLevel updatedDifficulty = adaptiveManager.UpdateDifficulty(
-                adaptiveManager.CurrentDifficulty,
-                tracker.elapsedTime,
-                tracker.mistakes,
-                tracker.hintsUsed);
-            adaptiveManager.CurrentDifficulty = updatedDifficulty;
-        }
-
-        // Set grid size and blocked probability based on the (updated) current difficulty.
         gridSize = adaptiveManager.GetAdjustedGridSize(adaptiveManager.CurrentDifficulty);
         blockedCellProbability = adaptiveManager.GetAdjustedBlockedProbability(adaptiveManager.CurrentDifficulty);
 
-        // Reset tracker for the new puzzle.
         tracker.Reset();
-
-        // Generate the new puzzle with updated parameters.
         kakuroPuzzle = new Kakuro(gridSize, gridSize, new System.Random(), blockedCellProbability);
+
         SetupGridLayout();
         CreateGridUI();
         UpdateDifficultyUI();
 
-        Debug.Log($"New Puzzle Generated: GridSize = {gridSize}, Difficulty = {adaptiveManager.CurrentDifficulty}");
+        Debug.Log($"New Puzzle Generated: GridSize={gridSize}, Difficulty={adaptiveManager.CurrentDifficulty}");
+    }
+    public void OnNewPuzzleButton()
+    {
+        difficultyAgent.OnPlayerFinishedPuzzle(
+            tracker.elapsedTime,
+            tracker.mistakes,
+            tracker.hintsUsed
+          );
+    }
+    public void NewPuzzle()
+    {
+        gridSize = adaptiveManager.GetAdjustedGridSize(adaptiveManager.CurrentDifficulty);
+        blockedCellProbability = adaptiveManager.GetAdjustedBlockedProbability(adaptiveManager.CurrentDifficulty);
+        tracker.Reset();
+        kakuroPuzzle = new Kakuro(gridSize, gridSize, new System.Random(), blockedCellProbability);
+
+        SetupGridLayout();
+        CreateGridUI();
+        UpdateDifficultyUI();
     }
     public void OnBackToMainMenu()
     {

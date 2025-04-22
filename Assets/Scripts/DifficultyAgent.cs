@@ -2,16 +2,20 @@ using UnityEngine;
 using Unity.MLAgents;
 using Unity.MLAgents.Actuators;
 using Unity.MLAgents.Sensors;
-using System;
 using System.Collections;
 
 public class DifficultyAgent : Agent
 {
+    [Header("Scene refs")]
     public GridManager gridManager;
+    public bool useSolver = false;
 
     private KakuroSolver solver;
-    private System.Random random;
-    public bool useSolver = false;  // Set to false for live play (no automatic solving)
+    private System.Random rand;
+
+    private float lastTime = 0f;
+    private int lastMist = 0;
+    private int lastHints = 0;
 
     public override void Initialize()
     {
@@ -19,105 +23,72 @@ public class DifficultyAgent : Agent
             gridManager = FindObjectOfType<GridManager>();
 
         solver = new KakuroSolver();
-        random = new System.Random();
+        rand = new System.Random();
     }
 
     public override void OnEpisodeBegin()
     {
-        Debug.Log("==== NEW EPISODE STARTED ====");
-        gridManager.NewPuzzle();
+        RequestDecision();
     }
 
     public override void CollectObservations(VectorSensor sensor)
     {
-        sensor.AddObservation(gridManager.Tracker.mistakes / 10f);    // Mistakes
-        sensor.AddObservation(gridManager.Tracker.elapsedTime / 300f); // Elapsed time
-        sensor.AddObservation(gridManager.Tracker.hintsUsed / 10f);    // Hints used
+        sensor.AddObservation(Mathf.Clamp01(lastMist / 10f));
+        sensor.AddObservation(Mathf.Clamp01(lastTime / 300f));
+        sensor.AddObservation(Mathf.Clamp01(lastHints / 10f));
     }
 
     public override void OnActionReceived(ActionBuffers actions)
     {
-        if (!useSolver)
-        {
-            return;
-        }
+        var picked = (DifficultyLevel)actions.DiscreteActions[0];
+        Debug.Log($"picked {picked}");
 
-        int action = actions.DiscreteActions[0];
-        var chosenDifficulty = (DifficultyLevel)action;
-        gridManager.adaptiveManager.CurrentDifficulty = chosenDifficulty;
+        gridManager.adaptiveManager.CurrentDifficulty = picked;
 
         gridManager.NewPuzzle();
 
-        StartCoroutine(ProcessEpisode(chosenDifficulty));
+        if (useSolver)
+            StartCoroutine(SolveAndFinish(picked));
     }
 
-    private IEnumerator ProcessEpisode(DifficultyLevel chosenDifficulty)
+    IEnumerator SolveAndFinish(DifficultyLevel diff)
     {
-        float solveTime = 10f;
-        int mistakes = 1;
-        int hints = 0;
-
-        try
-        {
-            var result = solver.Solve(gridManager.kakuroPuzzle, random, chosenDifficulty);
-            solveTime = result.solveTime;
-            mistakes = result.mistakes;
-            hints = result.hintsUsed;
-            Debug.Log($"Solver OK | Time: {solveTime}, Mistakes: {mistakes}, Hints: {hints}");
-        }
-        catch (Exception e)
-        {
-            Debug.LogError($"Solver crashed: {e}");
-        }
-
-        // Simplified reward (always non-zero)
-        float reward = ComputeReward(solveTime, mistakes, hints, chosenDifficulty);
-
-        Debug.Log($"Final reward: {reward}");
+        var result = solver.Solve(gridManager.kakuroPuzzle, rand, diff);
+        float reward = ComputeReward(result.solveTime, result.mistakes, result.hintsUsed, diff);
+        lastTime = result.solveTime;
+        lastMist = result.mistakes;
+        lastHints = result.hintsUsed;
         AddReward(reward);
-
+        EndEpisode();
         yield return null;
-        EndEpisode();
     }
 
-    public void OnPlayerFinishedPuzzle(float playerSolveTime, int playerMistakes, int playerHints)
+    public void OnPlayerFinishedPuzzle(float t, int m, int h)
     {
-        gridManager.Tracker.UpdateStats(playerSolveTime, playerMistakes, playerHints);
+        lastTime = t;
+        lastMist = m;
+        lastHints = h;
 
-        var currentDifficulty = gridManager.adaptiveManager.CurrentDifficulty;
-        float reward = ComputeReward(playerSolveTime, playerMistakes, playerHints, currentDifficulty);
+        float reward = ComputeReward(t, m, h, gridManager.adaptiveManager.CurrentDifficulty);
         AddReward(reward);
 
-        Debug.Log($"Player Finished Puzzle - Difficulty: {currentDifficulty}, " +
-                  $"SolveTime: {playerSolveTime:F2}s, Mistakes: {playerMistakes}, Hints: {playerHints}, Reward: {reward}");
         EndEpisode();
     }
-
 
     public override void Heuristic(in ActionBuffers actionsOut)
     {
-        ActionSegment<int> discreteActions = actionsOut.DiscreteActions;
-        if (Input.GetKey(KeyCode.LeftArrow))
-            discreteActions[0] = 0; // Choose Easy
-        else if (Input.GetKey(KeyCode.RightArrow))
-            discreteActions[0] = 2; // Choose Hard
-        else
-            discreteActions[0] = 1; // Default to Medium
+        var d = actionsOut.DiscreteActions;
+        if (Input.GetKey(KeyCode.LeftArrow)) d[0] = 0;
+        else if (Input.GetKey(KeyCode.RightArrow)) d[0] = 2;
+        else d[0] = 1;
     }
 
-    private float ComputeReward(float solveTime, int mistakes, int hints, DifficultyLevel chosenDifficulty)
+    private float ComputeReward(float time, int mistakes, int hints, DifficultyLevel d)
     {
-        float baseReward = 1.0f;
-
-        float timePenalty = solveTime * 0.02f;
-        float mistakePenalty = mistakes * 0.005f;
-        float hintPenalty = hints * 0.005f;
-
-        float difficultyBonus = (int)chosenDifficulty * 0.1f;
-
-        float finalReward = baseReward + difficultyBonus - timePenalty - mistakePenalty - hintPenalty;
-        return finalReward;
+        return 1f
+             + ((int)d) * 0.1f
+             - 0.02f * time
+             - 0.005f * mistakes
+             - 0.005f * hints;
     }
-
-
 }

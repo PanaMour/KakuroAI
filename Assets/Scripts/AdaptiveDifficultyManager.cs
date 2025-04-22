@@ -19,17 +19,6 @@ public class AdaptiveDifficultyManager
         else
             rating = "slow";
 
-        // Apply a state-machine transition:
-        // - If current difficulty is Easy:
-        //     - If performance is fast, then upgrade to Medium.
-        //     - Otherwise, stay Easy.
-        // - If current difficulty is Medium:
-        //     - If performance is fast, upgrade to Hard.
-        //     - If performance is slow, downgrade to Easy.
-        //     - Otherwise, remain Medium.
-        // - If current difficulty is Hard:
-        //     - If performance is slow, downgrade to Medium.
-        //     - Otherwise, remain Hard.
         switch (currentDifficulty)
         {
             case DifficultyLevel.Easy:
